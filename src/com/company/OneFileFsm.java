@@ -10,11 +10,24 @@ import java.util.Set;
 
 public class OneFileFsm {
 
+    // It's very handy to use method "name()" here because Enums also have it
     interface IState { String name(); }
+
+    interface IAction { void run(IEvent event); }
 
     interface IEvent { String name(); }
 
-    interface IAction { void run(); }
+    static class DataEvent implements IEvent {
+        private final String name;
+        private final Object data;
+
+        private DataEvent(String name, Object data) { this.name = name; this.data = data; }
+
+        public static DataEvent of(IEvent event, Object data) { return new DataEvent(event.name(), data); }
+
+        public String name() { return name; }
+        public Object getData() { return data; }
+    }
 
     static class Transition {
         private final IState sourceState;
@@ -47,11 +60,11 @@ public class OneFileFsm {
         public void fireTransitionEvent(IEvent event) {
             for (Transition transition : transitions) {
                 if(
-                    transition.getSourceState().equals(currentState) &&
-                    transition.getTransitionEvent().equals(event)
+                    transition.getSourceState().name().equals(currentState.name()) &&
+                    transition.getTransitionEvent().name().equals(event.name())
                 ) {
                     System.out.println(String.format("FSM is changing state: [%s]->[%s].", this.currentState, transition.getTargetState()));
-                    transition.getTransitionAction().run();
+                    transition.getTransitionAction().run(event);
                     this.currentState = transition.getTargetState();
                     break;
                 }
@@ -59,19 +72,18 @@ public class OneFileFsm {
         }
     }
 
-
     static class Example {
         enum State implements IState {
             MUSIC_PLAYING, MUSIC_PAUSED, MUSIC_STOPPED
         }
 
         enum Event implements IEvent {
-            PRESSED_PLAY_BUTTON, PRESSED_PAUSE_BUTTON, PRESSED_STOP_BUTTON;
+            PRESSED_PLAY_BUTTON, PRESSED_PAUSE_BUTTON, PRESSED_STOP_BUTTON
         }
 
-        static IAction playAction = () -> { System.out.println("The music is playing now"); };
-        static IAction pauseAction = () -> { System.out.println("The music is paused now"); };
-        static IAction stopAction = () -> { System.out.println("The music is stopped now"); };
+        static IAction playAction  = (event) -> { System.out.println("The music is playing now " + ((event instanceof DataEvent) ? ((DataEvent)event).getData() : "")); };
+        static IAction pauseAction = (event) -> { System.out.println("The music is paused now"); };
+        static IAction stopAction  = (event) -> { System.out.println("The music is stopped now"); };
     }
 
     public static void main(String[] args) {
@@ -86,15 +98,20 @@ public class OneFileFsm {
 
         FSM musicFSM = new FSM(musicTransitions, initialState);
 
-        List<IEvent> musicPlayerAutomaticScenario = asList(
+        // Let's create some music events and then run them
+        List<IEvent> musicPlayerAutoScript = asList(
             Event.PRESSED_PLAY_BUTTON,
             Event.PRESSED_PAUSE_BUTTON,
-            Event.PRESSED_PLAY_BUTTON,
+            // Example of Event with data
+            DataEvent.of(Event.PRESSED_PLAY_BUTTON, "(Bob Marley - Bad Boys)"),
+            // Next event will be ignored. There is no such transition PRESSED_PLAY_BUTTON -> PRESSED_PLAY_BUTTON
             Event.PRESSED_PLAY_BUTTON,
             Event.PRESSED_STOP_BUTTON,
+            // Next event will be ignored. There is no such transition PRESSED_STOP_BUTTON -> PRESSED_STOP_BUTTON
             Event.PRESSED_STOP_BUTTON
         );
-        musicPlayerAutomaticScenario.forEach(playerEvent ->
-            musicFSM.fireTransitionEvent(playerEvent));
+
+        for (IEvent playerEvent : musicPlayerAutoScript)
+            musicFSM.fireTransitionEvent(playerEvent);
     }
 }
