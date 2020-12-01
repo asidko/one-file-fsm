@@ -1,4 +1,4 @@
-# Pretty easy and understandable Final State Machine in Java
+# Final State Machine example in Java
 
 This is one of the simplest and good looking FSM written in Java.  
 All implementation contained in the same file which takes only ~100 lines of code (with examples).
@@ -27,10 +27,6 @@ Each transition contains a simple demo action that prints a text to the console.
         Event.PRESSED_PAUSE_BUTTON,
         // Example of Event with data
         DataEvent.of(Event.PRESSED_PLAY_BUTTON, "(Bob Marley - Bad Boys)"),
-        // Next event will be ignored. There is no such transition PRESSED_PLAY_BUTTON -> PRESSED_PLAY_BUTTON
-        Event.PRESSED_PLAY_BUTTON,
-        Event.PRESSED_STOP_BUTTON,
-        // Next event will be ignored. There is no such transition PRESSED_STOP_BUTTON -> PRESSED_STOP_BUTTON
         Event.PRESSED_STOP_BUTTON
     );
     
@@ -43,12 +39,8 @@ The result would be the following:
 ![image](https://user-images.githubusercontent.com/22843881/78972281-116bdd00-7b16-11ea-8f25-92a61d944157.png)
 
 
-## Real usage
-
-This FSM could be used in real projects, but most likely you will need some additional improvements, for example:
+## Real usage improvements
 
 - Add null checks (at least in `fireTransitionEvent()` method of the FSM class).
-- Save not only the `currentState` of FSM but also a whole current transition (because transition holds the information about the next state, that could be useful) 
-- Add more events for `Transition` (for example, in addition to `transitionAction` you can also add `afterTransitionAction`).
 - Pass `fsm` as the second argument to `run()` method in `IAction`. This feature will allow you, for example, to call `fsm.fireTransitionEvent()` in `afterTransitionAction` 
 and your FSM will be able to switch to the next state automatically.
